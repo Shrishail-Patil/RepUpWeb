@@ -65,7 +65,7 @@ export default function ProfilePage() {
     try {
       const response = await axios.post('/api/generateWorkoutPlan', { prompt: promptText });
       setWorkoutPlan(response.data.content);
-      // router.push("/auth/WorkoutPlan")
+      router.push("/auth/Dashboard")
     } catch (error) {
       console.error('Error generating workout plan:', error);
       setWorkoutPlan('Error generating workout plan. Please try again.');
