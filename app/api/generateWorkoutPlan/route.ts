@@ -45,10 +45,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to store workout plan' }, { status: 500 });
     }
 
-    return NextResponse.json({
-      message: 'Workout plan generated and stored successfully',
-      workoutPlan,
-    });
+    // Redirect user to the dashboard after successful operation
+    return NextResponse.redirect(new URL('/auth/Dashboard', req.url));
   } catch (error) {
     console.error('Error generating or storing workout plan:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

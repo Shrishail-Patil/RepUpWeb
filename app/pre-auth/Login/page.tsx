@@ -5,6 +5,9 @@ import { motion } from 'framer-motion'
 import { supabase } from '@/utils/supabase/supabaseClient'
 import Cookies from 'js-cookie'
 import { useRouter } from 'next/navigation'
+import { SquiggleButton } from '@/components/squiggle-button'
+import { AnimatedDumbbell } from '@/components/animated-dumbbell'
+import { AnimatedPlate } from '@/components/animated-plate'
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
@@ -37,8 +40,8 @@ export default function LoginPage() {
         // Insert user data into the 'users' table
         const { error: insertError } = await supabase.from('users').insert({
           uid: user.id, // Ensure unique ID
-          Username:name,
-          Email:email,
+          Username: name,
+          Email: email,
         })
 
         if (insertError) {
@@ -65,24 +68,50 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800">
+    <div className="min-h-screen flex items-center justify-center">
+      {/* Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <AnimatedDumbbell />
+        <div className="absolute top-1/4 right-1/4">
+          <AnimatedDumbbell />
+        </div>
+        <div className="absolute bottom-1/4 left-1/3">
+          <AnimatedPlate size={80} />
+        </div>
+        <div className="absolute top-1/3 right-1/3">
+          <AnimatedPlate size={120} delay={2} />
+        </div>
+      </div>
+
       <motion.div
-        className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md"
+        className="glass-card p-8 rounded-2xl shadow-xl w-full max-w-md relative z-10"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Login to RepUp</h2>
-        <motion.button
-          onClick={handleGoogleLogin}
-          disabled={loading}
-          className="w-full bg-gray-900 text-white rounded-full py-3 font-semibold transition duration-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <motion.h2 
+          className="text-3xl font-bold text-center mb-6 text-gradient"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
         >
-          {loading ? 'Loading...' : 'Sign in with Google'}
-        </motion.button>
+          Login to RepUp
+        </motion.h2>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <SquiggleButton
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="w-full"
+          >
+            {loading ? 'Loading...' : 'Sign in with Google'}
+          </SquiggleButton>
+        </motion.div>
       </motion.div>
     </div>
   )
 }
+

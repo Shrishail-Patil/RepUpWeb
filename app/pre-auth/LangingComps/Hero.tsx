@@ -1,15 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import Cookies from 'js-cookie'
-import Link from 'next/link'
-import { useEffect } from 'react'
 
 export default function Hero() {
-  useEffect(()=>{
-    Cookies.remove("uid")
-    Cookies.remove("uname")
-  })
   return (
     <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-b from-gray-900 to-gray-800 text-white overflow-hidden">
       <div className="container px-4 md:px-6 mx-auto">
@@ -34,9 +27,7 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <Link href={"/pre-auth/Login"}
-            className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-lg font-medium text-gray-900 shadow-lg transition-all duration-300 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400">Get Started</Link>
-            {/* <motion.a
+            <motion.a
               className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-lg font-medium text-gray-900 shadow-lg transition-all duration-300 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400"
               href="#"
               whileHover={{ 
@@ -46,7 +37,7 @@ export default function Hero() {
               whileTap={{ scale: 0.95 }}
             >
               Get Started
-            </motion.a> */}
+            </motion.a>
           </motion.div>
         </div>
       </div>
