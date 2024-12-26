@@ -44,6 +44,7 @@ export default function HomePage({ userId }: HomePageProps) {
   useEffect(() => {
     async function loadUserInfo() {
       try {
+        // Load user information logic here
       } catch (error) {
         console.error('Error loading user info:', error)
       } finally {
@@ -60,16 +61,19 @@ export default function HomePage({ userId }: HomePageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
-      <div className="header flex-1 pr-4 py-6">
-        <div className="logout justify-self-end">
-          <button className="text-sm font-medium text-slate-200" onClick={()=>{Cookies.remove("uid")
+      <header className="flex justify-end items-center py-6 px-4">
+        <button 
+          className="text-sm font-medium text-slate-200" 
+          onClick={() => {
+            Cookies.remove("uid")
             Cookies.remove("uname")
             router.replace("/")
-          }}>
-            Logout
-          </button>
-        </div>
-      </div>
+          }}
+        >
+          Logout
+        </button>
+      </header>
+
       <div className="container mx-auto px-4 py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -109,7 +113,7 @@ export default function HomePage({ userId }: HomePageProps) {
               <Dumbbell className="mr-2 h-5 w-5" /> Workout Plan
             </Button>
           </Link>
-          <Link href="/workout-track">
+          <Link href="/auth/WorkoutTrack">
             <Button size="lg" className="w-full sm:w-auto bg-green-600 hover:bg-green-700">
               <ClipboardList className="mr-2 h-5 w-5" /> Workout Track
             </Button>
@@ -119,4 +123,3 @@ export default function HomePage({ userId }: HomePageProps) {
     </div>
   )
 }
-

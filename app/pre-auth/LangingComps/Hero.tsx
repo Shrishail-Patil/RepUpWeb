@@ -1,9 +1,15 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Cookies from 'js-cookie'
 import Link from 'next/link'
+import { useEffect } from 'react'
 
 export default function Hero() {
+  useEffect(()=>{
+    Cookies.remove("uid")
+    Cookies.remove("uname")
+  })
   return (
     <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-b from-gray-900 to-gray-800 text-white overflow-hidden">
       <div className="container px-4 md:px-6 mx-auto">

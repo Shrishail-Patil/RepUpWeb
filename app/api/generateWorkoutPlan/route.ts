@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     const workoutPlan = response.choices[0]?.message?.content || '';
 
     // Insert the workout plan into Supabase
-    const { error } = await supabase.from('workouts').insert([
+    const { error } = await supabase.from('users_workouts').insert([
       { user_id: userId, workout_plan: workoutPlan },
     ]);
 
