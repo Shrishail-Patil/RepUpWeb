@@ -5,9 +5,9 @@ export interface UserInfo {
     name:string;
     email:string;
     fullName: string;
-    lastWorkout: string;
-    totalWorkouts: number;
-    fitnessGoal: string;
+    lastWorkout?: string;
+    totalWorkouts?: number;
+    fitnessGoal?: string;
   }
   
   

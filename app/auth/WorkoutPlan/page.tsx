@@ -5,7 +5,8 @@ import { motion } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import { supabase } from '@/utils/supabase/supabaseClient'
 import Cookies from 'js-cookie'
-import { Button } from "@/components/ui/button"
+import Link from 'next/link'
+import { ArrowLeft, Download } from 'lucide-react'
 import jsPDF from 'jspdf'
 import { useRouter } from 'next/navigation'
 
@@ -13,7 +14,7 @@ export default function WorkoutPlanPage() {
   const [workoutPlan, setWorkoutPlan] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter();
+  const router = useRouter()
 
   useEffect(() => {
     const fetchWorkoutPlan = async () => {
@@ -55,47 +56,40 @@ export default function WorkoutPlanPage() {
   }, [])
 
   const downloadPDF = () => {
-    if (!workoutPlan) return;
+    if (!workoutPlan) return
   
-    const doc = new jsPDF();
+    const doc = new jsPDF()
+    
+    doc.setFont('helvetica')
+    doc.setFontSize(12)
   
-    // Set font and size
-    doc.setFont('helvetica');
-    doc.setFontSize(12);
+    doc.setFontSize(16)
+    doc.text('RepUp Workout Plan', 105, 20, { align: 'center' })
   
-    // Title
-    doc.setFontSize(16);
-    doc.text('RepUp Workout Plan', 105, 20, { align: 'center' });
+    let yPosition = 30
+    const lineHeight = 10
+    const pageHeight = doc.internal.pageSize.height
+    const marginBottom = 20
   
-    // Define variables for positioning
-    let yPosition = 30; // Start below the title
-    const lineHeight = 10; // Line height
-    const pageHeight = doc.internal.pageSize.height; // Height of the PDF page
-    const marginBottom = 20; // Bottom margin
+    const splitText = doc.splitTextToSize(workoutPlan, 180)
   
-    // Split the markdown text into lines that fit the PDF width
-    const splitText = doc.splitTextToSize(workoutPlan, 180);
-  
-    // Loop through lines and handle page breaks
     splitText.forEach((line: string | string[]) => {
       if (yPosition + lineHeight > pageHeight - marginBottom) {
-        // If content exceeds the current page, add a new page
-        doc.addPage();
-        yPosition = 20; // Reset yPosition for new page
+        doc.addPage()
+        yPosition = 20
       }
-      doc.text(line, 15, yPosition);
-      yPosition += lineHeight; // Move to the next line
-    });
+      doc.text(line, 15, yPosition)
+      yPosition += lineHeight
+    })
   
-    // Save the PDF
-    doc.save('RepUp Workout Plan.pdf');
-  };
+    doc.save('RepUp Workout Plan.pdf')
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
         <motion.div
-          className="text-white text-2xl"
+          className="text-2xl font-medium text-gray-900"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -108,9 +102,9 @@ export default function WorkoutPlanPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
         <motion.div
-          className="text-red-500 text-2xl text-center"
+          className="text-red-500 text-2xl text-center font-medium"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -122,44 +116,41 @@ export default function WorkoutPlanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white py-12">
-      <motion.div 
-        className="container mx-auto px-4 max-w-4xl"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="flex justify-between items-center mb-8">
-        {/* Back Arrow */}
-        <button 
-            onClick={() => router.back()} 
-            className="flex items-center text-gray-300 hover:text-white"
-          >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-6 w-6 mr-2" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
+      <div className="container mx-auto px-4 py-8">
+        <motion.div 
+          className="max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <header className="flex justify-between items-center mb-8">
+            <div className="flex items-center gap-8">
+              <button 
+                onClick={() => router.back()} 
+                className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </button>
+              <h1 className="text-3xl font-bold text-gray-900">Your Workout Plan</h1>
+            </div>
+            <button 
+              onClick={downloadPDF}
+              className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-black rounded-full hover:bg-gray-900 transition-colors"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
+              <Download className="h-4 w-4 mr-2" />
+              Download PDF
+            </button>
+          </header>
 
-          <h1 className="text-4xl font-bold">Your Workout Plan</h1>
-          <Button 
-            onClick={downloadPDF}
-            className="bg-white text-gray-900 hover:bg-gray-200"
-          >
-            Download PDF
-          </Button>
-        </div>
-        <div className="bg-gray-800 rounded-lg p-8 prose prose-invert max-w-none">
-          <ReactMarkdown>{workoutPlan || ''}</ReactMarkdown>
-        </div>
-      </motion.div>
+          <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-8 shadow-lg border border-white/20">
+            <div className="prose max-w-none">
+              <ReactMarkdown>{workoutPlan || ''}</ReactMarkdown>
+            </div>
+          </div>
+        </motion.div>
+      </div>
     </div>
   )
 }
-

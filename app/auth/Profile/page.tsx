@@ -12,13 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+// import { Switch } from "@/components/ui/switch";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import { useRouter } from "next/navigation";
 import { AnimatedDumbbell } from "@/components/animated-dumbbell";
 import { AnimatedPlate } from "@/components/animated-plate";
 import { SquiggleButton } from "@/components/squiggle-button";
+import SwitchBase from "@mui/material/internal/SwitchBase";
+import { Switch } from "@/components/ui/switch";
 
 export default function ProfilePage() {
   const [formData, setFormData] = useState({
@@ -194,7 +196,7 @@ export default function ProfilePage() {
               <Switch
                 id="hasEquipment"
                 onCheckedChange={handleSwitchChange}
-                className="bg-gray-200 data-[state=checked]:bg-black border-2 border-gray-300"
+                className="bg-purple-500  data-[state=checked]:bg-purple-300/20 border-2 border-purple-300/20"
               />
               <Label htmlFor="hasEquipment" className="text-gray-800">
                 I have access to gym equipment
