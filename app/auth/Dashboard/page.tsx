@@ -13,10 +13,6 @@ import { supabase } from '@/utils/supabase/supabaseClient'
 import { AnimatedDumbbell } from '@/components/animated-dumbbell'
 import { AnimatedPlate } from '@/components/animated-plate'
 
-interface HomePageProps {
-  userId: string
-}
-
 interface InfoCardProps {
   title: string
   value: string
@@ -43,7 +39,7 @@ function InfoCard({ title, value, icon }: InfoCardProps) {
   )
 }
 
-export default function HomePage({ userId }: HomePageProps) {
+export default function HomePage() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
@@ -51,7 +47,21 @@ export default function HomePage({ userId }: HomePageProps) {
   useEffect(() => {
     async function loadUserInfo() {
       try {
-        // Load user information logic here
+        const { data: sessionData } = await supabase.auth.getSession()
+        const session = sessionData?.session
+        if (session) {
+          const user = session.user
+          // Fetch user info if session exists (mocked data for now)
+          // setUserInfo({
+          //   lastWorkout: '2024-12-20', // Replace with actual data fetch
+          //   totalWorkouts: 10, // Replace with actual data fetch
+          //   fitnessGoal: 'Build Muscle', // Replace with actual data fetch
+          // })
+        } else {
+          // Clear state and redirect to login if no session
+          setUserInfo(null)
+          router.replace('/')
+        }
       } catch (error) {
         console.error('Error loading user info:', error)
       } finally {
@@ -60,7 +70,29 @@ export default function HomePage({ userId }: HomePageProps) {
     }
 
     loadUserInfo()
-  }, [userId])
+  }, [router])
+
+  const handleLogout = async () => {
+    try {
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut()
+      if (error) throw new Error('Error signing out: ' + error.message)
+
+      // Clear all cookies
+      const allCookies = Cookies.get()
+      Object.keys(allCookies).forEach(cookieName => {
+        Cookies.remove(cookieName)
+      })
+
+      // Clear user info from state
+      setUserInfo(null)
+
+      // Force a hard reload to clear cached session
+      window.location.href = '/'
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
 
   if (loading) {
     return (
@@ -76,26 +108,6 @@ export default function HomePage({ userId }: HomePageProps) {
       </div>
     )
   }
-
-  const handleLogout = async () => {
-    try {
-      // Clear Supabase session
-      const { error } = await supabase.auth.signOut()
-      if (error) throw new Error('Error signing out: ' + error.message)
-
-      // Clear all cookies
-      const allCookies = Cookies.get()
-      Object.keys(allCookies).forEach(cookieName => {
-        Cookies.remove(cookieName)
-      })
-
-      // Redirect to login page
-      router.replace('/')
-    } catch (error) {
-      console.error('Logout error:', error)
-    }
-  }
-
 
   return (
     <div className="min-h-screen text-white">
@@ -114,11 +126,7 @@ export default function HomePage({ userId }: HomePageProps) {
       </div>
 
       <header className="flex justify-end items-center py-6 px-4 relative z-10">
-        <SquiggleButton
-        onClick={handleLogout}
-        >
-          Logout
-        </SquiggleButton>
+        <SquiggleButton onClick={handleLogout}>Logout</SquiggleButton>
       </header>
 
       <div className="container mx-auto px-4 py-16 relative z-10">
@@ -127,8 +135,12 @@ export default function HomePage({ userId }: HomePageProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-5xl font-bold mb-4 text-gradient">Welcome, {Cookies.get("uname")}</h1>
-          <p className="text-xl text-gradient mb-12">Ready to crush your fitness goals today?</p>
+          <h1 className="text-5xl font-bold mb-4 text-gradient">
+            Welcome, {Cookies.get('uname')}
+          </h1>
+          <p className="text-xl text-gradient mb-12">
+            Ready to crush your fitness goals today?
+          </p>
         </motion.div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">
@@ -154,7 +166,7 @@ export default function HomePage({ userId }: HomePageProps) {
           />
         </div>
 
-        <motion.div 
+        <motion.div
           className="flex flex-col sm:flex-row gap-6 justify-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -175,4 +187,3 @@ export default function HomePage({ userId }: HomePageProps) {
     </div>
   )
 }
-

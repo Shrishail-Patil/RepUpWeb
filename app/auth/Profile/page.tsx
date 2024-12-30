@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,15 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-// import { Switch } from "@/components/ui/switch";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import { useRouter } from "next/navigation";
 import { AnimatedDumbbell } from "@/components/animated-dumbbell";
 import { AnimatedPlate } from "@/components/animated-plate";
 import { SquiggleButton } from "@/components/squiggle-button";
-import SwitchBase from "@mui/material/internal/SwitchBase";
 import { Switch } from "@/components/ui/switch";
+import Cookies from "js-cookie";
+import { supabase } from "@/utils/supabase/supabaseClient";
 
 export default function ProfilePage() {
   const [formData, setFormData] = useState({
@@ -39,6 +39,31 @@ export default function ProfilePage() {
   const router = useRouter();
   const [prompt, setPrompt] = useState("");
   const [workoutPlan, setWorkoutPlan] = useState("");
+
+  useEffect(() => {
+    // Fetch user session and set cookies
+    async function fetchSession() {
+      try {
+        const { data: sessionData, error } = await supabase.auth.getSession();
+        if (error) throw error;
+
+        const session = sessionData?.session;
+        if (session) {
+          const user = session.user;
+          // Set cookies for uid and uname
+          Cookies.set("uid", user.id, { expires: 7 }); // Expires in 7 days
+          Cookies.set("uname", user.user_metadata?.name || "User", { expires: 7 });
+        } else {
+          router.replace("/"); // Redirect to login if no session
+        }
+      } catch (error) {
+        console.error("Error fetching session:", error);
+        router.replace("/"); // Redirect to login on error
+      }
+    }
+
+    fetchSession();
+  }, [router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -84,7 +109,6 @@ export default function ProfilePage() {
       setWorkoutPlan("Error generating workout plan. Please try again.");
     }
   };
-
   return (
     <div className="min-h-screen">
       {/* Background Elements */}
