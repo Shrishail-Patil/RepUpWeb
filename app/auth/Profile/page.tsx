@@ -21,6 +21,7 @@ import { SquiggleButton } from "@/components/squiggle-button";
 import { Switch } from "@/components/ui/switch";
 import Cookies from "js-cookie";
 import { supabase } from "@/utils/supabase/supabaseClient";
+import { UUID } from "crypto";
 
 export default function ProfilePage() {
   const [formData, setFormData] = useState({
@@ -39,9 +40,30 @@ export default function ProfilePage() {
   const router = useRouter();
   const [prompt, setPrompt] = useState("");
   const [workoutPlan, setWorkoutPlan] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Fetch user session and set cookies
+    async function checkUser(uid:string) {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error(error);
+        }
+      else {
+          const user = await supabase.from("users_workouts").select("*").eq("id", uid).single();
+          if (user) {
+            setTimeout(() => {
+              router.push("/auth/Dashboard");
+            }, 1000); // Add 3-second delay
+          }
+          else{
+            setTimeout(() => {
+              setLoading(false);
+            }, 1000); // Add 3-second delay
+            // setLoading(false)
+          }
+        }
+    }
     async function fetchSession() {
       try {
         const { data: sessionData, error } = await supabase.auth.getSession();
@@ -50,6 +72,9 @@ export default function ProfilePage() {
         const session = sessionData?.session;
         if (session) {
           const user = session.user;
+          checkUser(user.id);
+          
+
           // Set cookies for uid and uname
           Cookies.set("uid", user.id, { expires: 7 }); // Expires in 7 days
           Cookies.set("uname", user.user_metadata?.name || "User", { expires: 7 });
@@ -97,6 +122,7 @@ export default function ProfilePage() {
     Note: Do not give any extra advice and keep the whole plan clean and easy to read. Don't make it too long.`;
 
     setPrompt(promptText);
+    
 
     try {
       const response = await axios.post("/api/generateWorkoutPlan", {
@@ -109,6 +135,22 @@ export default function ProfilePage() {
       setWorkoutPlan("Error generating workout plan. Please try again.");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <motion.div
+          className="text-2xl font-medium text-gray-900"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          Logging you in 😊
+        </motion.div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen">
       {/* Background Elements */}

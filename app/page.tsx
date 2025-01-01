@@ -11,6 +11,18 @@ import { supabase } from '@/utils/supabase/client';
 
 export default function Home() {
   const router = useRouter();
+  useEffect(() => {
+      checkLogin();
+    },[router]);
+    const checkLogin = async () => {
+      const { data: sessionData, error } = await supabase.auth.getSession();
+      if (error) throw error;
+  
+      const session = sessionData?.session;
+      if (session) {
+        router.replace('/auth/Dashboard');
+      }
+    }
   return (
     <div className="min-h-screen">
       {/* Background Elements */}

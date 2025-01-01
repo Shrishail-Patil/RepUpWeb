@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/utils/supabase/supabaseClient';
 import Cookies from 'js-cookie';
@@ -34,34 +34,37 @@ export default function LoginPage() {
       }
 
       // Retrieve the session data after login
-      const { data: sessionData } = await supabase.auth.getSession();
-      const session = sessionData?.session;
+      // const { data: sessionData } = await supabase.auth.getSession();
+      // const session = sessionData?.session;
 
-      if (session) {
-        const { user } = session;
-        const { email, user_metadata } = user;
-        const name = user_metadata?.name || 'Unknown User';
+      // if (session) {
+      //   const { user } = session;
+      //   const { email, user_metadata } = user;
+      //   const name = user_metadata?.name || 'Unknown User';
 
-        // Insert or update user data into Supabase 'users' table
-        const { error: insertError } = await supabase.from('users').upsert({
-          uid: user.id,
-          Username: name,
-          Email: email,
-        });
+      //   // Insert or update user data into Supabase 'users' table
+      //   const { error: insertError } = await supabase.from('users').insert({
+      //     uid: user.id,
+      //     Username: name,
+      //     Email: email,
+      //   });
 
-        if (insertError) {
-          console.error('Error inserting/updating user:', insertError.message);
-        } else {
-          console.log('User data inserted/updated successfully.');
-        }
+      //   if (insertError) {
+      //     console.error('Error inserting/updating user:', insertError.message);
+      //   } else {
+      //     console.log('User data inserted/updated successfully.');
+      //   }
 
-        // Store user information in cookies
-        Cookies.set('uid', user.id, { expires: 7 });
-        Cookies.set('uname', name, { expires: 7 });
+      //   // Store user information in cookies
+      //   Cookies.set('uid', user.id, { expires: 7 });
+      //   Cookies.set('uname', name, { expires: 7 });
 
-        // Redirect to the workout plan page
-        router.push('/auth/WorkoutPlan');
-      }
+      //   // Redirect to the workout plan page
+      //   router.push('/auth/WorkoutPlan');
+      // }
+      // else{
+      //   alert('Session not found');
+      // }
     } catch (error) {
       if (error instanceof Error) {
         console.error('Login error:', error.message);
