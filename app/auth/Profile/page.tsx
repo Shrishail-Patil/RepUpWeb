@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,13 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import { useRouter } from "next/navigation";
 import { AnimatedDumbbell } from "@/components/animated-dumbbell";
 import { AnimatedPlate } from "@/components/animated-plate";
 import { SquiggleButton } from "@/components/squiggle-button";
+import { Switch } from "@/components/ui/switch";
+import Cookies from "js-cookie";
+import { supabase } from "@/utils/supabase/supabaseClient";
+import { UUID } from "crypto";
 
 export default function ProfilePage() {
   const [formData, setFormData] = useState({
@@ -37,6 +40,80 @@ export default function ProfilePage() {
   const router = useRouter();
   const [prompt, setPrompt] = useState("");
   const [workoutPlan, setWorkoutPlan] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch user session and set cookies
+    // async function checkUser(uid:string) {
+    //   const { data, error } = await supabase.auth.getSession();
+    //   if (error) {
+    //     console.error(error);
+    //     }
+    //   else {
+    //       const user = await supabase.from("users_workouts").select("*").eq("user_id", uid).single();
+    //       if (user) {
+    //         setTimeout(() => {
+    //           router.push("/auth/Dashboard");
+    //         }, 1000); // Add 3-second delay
+    //       }
+    //       else{
+    //         setTimeout(() => {
+    //           setLoading(false);
+    //         }, 1000); // Add 3-second delay
+    //         // setLoading(false)
+    //       }
+    //     }
+    // }
+    async function checkUser(uid: string) {
+      try {
+        const { data: user, error } = await supabase
+          .from("users_workouts")
+          .select("*")
+          .eq("user_id", uid)
+          .single();
+    
+        // if (error) {
+        //   console.error("Error fetching user workouts:", error);
+        //   setLoading(false);
+        //   return;
+        // }
+    
+        if (user) {
+          router.push("/auth/Dashboard"); // Redirect if user data exists
+        } else {
+          setLoading(false); // Stop loading if no data exists
+        }
+      } catch (err) {
+        console.log("Error in checkUser:", err);
+        setLoading(false); // Ensure loading state ends on error
+      }
+    }
+    
+    async function fetchSession() {
+      try {
+        const { data: sessionData, error } = await supabase.auth.getSession();
+        if (error) throw error;
+
+        const session = sessionData?.session;
+        if (session) {
+          const user = session.user;
+          checkUser(user.id);
+          
+
+          // Set cookies for uid and uname
+          Cookies.set("uid", user.id, { expires: 7 }); // Expires in 7 days
+          Cookies.set("uname", user.user_metadata?.name || "User", { expires: 7 });
+        } else {
+          router.replace("/"); // Redirect to login if no session
+        }
+      } catch (error) {
+        console.error("Error fetching session:", error);
+        router.replace("/"); // Redirect to login on error
+      }
+    }
+
+    fetchSession();
+  }, [router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -52,24 +129,86 @@ export default function ProfilePage() {
   };
 
   const generatePrompt = async () => {
-    const promptText = `Generate a personalized 90-day workout plan based on my profile:
-    
-    I am a ${formData.age} year old ${formData.gender}, ${formData.height}cm tall, weighing ${formData.weight}kg. I have ${formData.hasEquipment ? "access to a fully equipped gym" : "no gym equipment"}. I can work out ${formData.activeDays} days per week. My goal is ${formData.goal} with a target weight of ${formData.goalWeight}kg. My fitness level is ${formData.fitnessLevel}. ${
-      formData.injuries
-        ? `I have the following medical conditions/injuries to consider: ${formData.injuries}`
-        : ""
-    } I prefer a ${formData.workoutSplit} workout split.
-    
-    Requirements:
-    1. Provide a markdown-formatted workout plan.
-    2. Base all recommendations on recent fitness research.
-    3. Adjust exercises for my fitness level and equipment access.
-    4. Include specific weights/intensities.
-    5. The plan should be perfect and easily understandable. Give the plan in markdown format and don't use tables (mandatory).
-    
-    Note: Do not give any extra advice and keep the whole plan clean and easy to read. Don't make it too long.`;
+    const promptText = `Generate a comprehensive, 90-day personalized workout plan tailored to the following profile:
+
+### User Profile:
+- **Age:** ${formData.age} years
+- **Gender:** ${formData.gender}
+- **Height:** ${formData.height} cm
+- **Weight:** ${formData.weight} kg
+- **Equipment Access:** ${formData.hasEquipment ? "Fully equipped gym" : "No gym equipment"}
+- **Available Workout Days:** ${formData.activeDays} days per week
+- **Goal:** ${formData.goal} (Target Weight: ${formData.goalWeight} kg)
+- **Fitness Level:** ${formData.fitnessLevel}
+${formData.injuries ? `- **Medical Conditions/Injuries:** ${formData.injuries}` : ""}
+- **Preferred Workout Split:** ${formData.workoutSplit}
+
+### Requirements:
+1. **Markdown Format:** Deliver the entire workout plan in a clean and professional markdown format for ease of understanding and readability. Avoid using tables.
+2. **Research-Based Plan:** Base all exercise recommendations on the latest fitness and exercise science. Ensure accuracy and efficacy for achieving the stated goals.
+3. **Customization:** Adapt exercises to the user’s fitness level, available equipment, and any medical conditions/injuries if applicable. Include modifications for safety and progression.
+4. **Detail-Oriented:** Specify workout splits, exercise names, sets, repetitions, rest times, and recommended weights/intensities (using RPE or percentage of 1RM where appropriate).
+5. **Clarity:** The plan should be clean, easy to follow, and entirely focused on delivering results. Avoid any additional advice, unnecessary text, or extraneous formatting.
+
+### Additional Notes:
+- **Consistency:** Ensure that the workout progression aligns with the user’s fitness level and goals, incorporating progressive overload principles.
+- **Variety:** Include an engaging variety of exercises to maintain motivation while still focusing on the target goal.
+- **Periodization:** Structure the plan across the 90 days to ensure steady progress with appropriate recovery periods.
+
+**Output Example:**  
+Deliver the plan in a markdown format similar to this structure:
+
+\`\`\`markdown
+# 90-Day Personalized Workout Plan
+
+## Week 1-4: Foundation Phase
+### Day 1: Upper Body Strength
+- **Warm-Up:** 5 minutes of dynamic stretching and light cardio
+- **Workout:**
+  - Bench Press: 4 sets of 8 reps @ 70% 1RM
+  - Dumbbell Rows: 4 sets of 10 reps
+  - Shoulder Press: 3 sets of 12 reps
+  - Plank: 3 sets of 1 minute hold
+- **Cooldown:** 5 minutes of static stretching
+
+...
+
+## Week 5-8: Progression Phase
+...
+
+## Week 9-12: Peak Phase
+...
+\`\`\`
+
+Focus on precision, readability, and a logical structure to ensure the plan is actionable and effective.`;
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData?.session?.user?.id;
+
+    const { error } = await supabase.from("user_fitness_details").insert({
+    user_id: userId,
+    gender: formData.gender,
+    age: formData.age,
+    height: formData.height,
+    weight: formData.weight,
+    active_days: formData.activeDays,
+    has_equipment: formData.hasEquipment,
+    goal:  formData.goal,
+    goal_weight: formData.goalWeight,
+    injuries: formData.injuries,
+    fitness_level: formData.fitnessLevel,
+    workout_split: formData.workoutSplit,
+  })
+  if (error) {
+    console.error("Supabase Insert Error:", error.message);
+  }
+  // console.log(error);
+    // if (error) {
+    //   console.error("Error inserting user fitness details:", error);
+    // }
 
     setPrompt(promptText);
+    
 
     try {
       const response = await axios.post("/api/generateWorkoutPlan", {
@@ -82,6 +221,21 @@ export default function ProfilePage() {
       setWorkoutPlan("Error generating workout plan. Please try again.");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <motion.div
+          className="text-2xl font-medium text-gray-900"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          Logging you in 😊
+        </motion.div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen">
@@ -194,7 +348,7 @@ export default function ProfilePage() {
               <Switch
                 id="hasEquipment"
                 onCheckedChange={handleSwitchChange}
-                className="bg-gray-200 data-[state=checked]:bg-black border-2 border-gray-300"
+                className="bg-purple-500  data-[state=checked]:bg-purple-300/20 border-2 border-purple-300/20"
               />
               <Label htmlFor="hasEquipment" className="text-gray-800">
                 I have access to gym equipment
