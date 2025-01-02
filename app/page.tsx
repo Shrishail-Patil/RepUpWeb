@@ -4,18 +4,31 @@ import { motion } from 'framer-motion'
 import { AnimatedDumbbell } from '@/components/animated-dumbbell'
 import { AnimatedPlate } from '@/components/animated-plate'
 import { SquiggleButton } from '@/components/squiggle-button'
+import { TemporaryMessage } from '@/components/temporary-message'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Cookies from 'js-cookie'
+import { supabase } from '@/utils/supabase/client'
 
 export default function Home() {
-  const router = useRouter();
-  useEffect(()=>{
-    Cookies.remove("uid")
-    Cookies.remove("uname")
-  },[])
+  const router = useRouter()
+  useEffect(() => {
+    checkLogin()
+  }, [router])
+  const checkLogin = async () => {
+    const { data: sessionData, error } = await supabase.auth.getSession()
+    if (error) throw error
+
+    const session = sessionData?.session
+    if (session) {
+      router.replace('/auth/Dashboard')
+    }
+  }
+
   return (
     <div className="min-h-screen">
+      <TemporaryMessage />
+      
       {/* Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <AnimatedDumbbell />
@@ -61,9 +74,7 @@ export default function Home() {
           <a href="#pricing" className="text-sm text-gray-600 hover:text-black transition-colors">
             Pricing
           </a>
-          <SquiggleButton onClick={()=>{
-              router.push("/pre-auth/Login")
-            }}>
+          <SquiggleButton>
             Sign In
           </SquiggleButton>
         </motion.nav>
@@ -84,7 +95,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
-            className="text-4xl md:text-6xl pb-3 lg:text-7xl font-bold mb-6 text-gradient tracking-tight"
+            className="text-4xl pb-3 md:text-6xl lg:text-7xl font-bold mb-6 text-gradient tracking-tight"
           >
             Transform your
             <br />
@@ -105,9 +116,7 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 1 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <SquiggleButton onClick={()=>{
-              router.push("/pre-auth/Login")
-            }}>
+            <SquiggleButton onClick={() => router.push('/pre-auth/Login')}>
               Get started free
             </SquiggleButton>
             <SquiggleButton variant="outline">
