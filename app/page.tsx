@@ -1,30 +1,34 @@
 'use client'
 
-import { motion } from 'framer-motion';
-import { AnimatedDumbbell } from '@/components/animated-dumbbell';
-import { AnimatedPlate } from '@/components/animated-plate';
-import { SquiggleButton } from '@/components/squiggle-button';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import Cookies from 'js-cookie';
-import { supabase } from '@/utils/supabase/client';
+import { motion } from 'framer-motion'
+import { AnimatedDumbbell } from '@/components/animated-dumbbell'
+import { AnimatedPlate } from '@/components/animated-plate'
+import { SquiggleButton } from '@/components/squiggle-button'
+import { TemporaryMessage } from '@/components/temporary-message'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import Cookies from 'js-cookie'
+import { supabase } from '@/utils/supabase/client'
 
 export default function Home() {
-  const router = useRouter();
+  const router = useRouter()
   useEffect(() => {
-      checkLogin();
-    },[router]);
-    const checkLogin = async () => {
-      const { data: sessionData, error } = await supabase.auth.getSession();
-      if (error) throw error;
-  
-      const session = sessionData?.session;
-      if (session) {
-        router.replace('/auth/Dashboard');
-      }
+    checkLogin()
+  }, [router])
+  const checkLogin = async () => {
+    const { data: sessionData, error } = await supabase.auth.getSession()
+    if (error) throw error
+
+    const session = sessionData?.session
+    if (session) {
+      router.replace('/auth/Dashboard')
     }
+  }
+
   return (
     <div className="min-h-screen">
+      <TemporaryMessage />
+      
       {/* Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <AnimatedDumbbell />

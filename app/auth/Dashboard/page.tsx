@@ -42,7 +42,21 @@ function InfoCard({ title, value, icon }: InfoCardProps) {
 export default function HomePage() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [loading, setLoading] = useState(true)
+  const [lastDate, setLastDate] = useState(null)
+  const [goal, setGoal] = useState()
+  const [totalWorkouts, setTotalWorkouts] = useState<number>(0)  // For total workout count
+
   const router = useRouter()
+  
+  // Utility function to format date as dd-mm-yyyy
+  const formatDate = (date: string | null): string => {
+  if (!date) return 'N/A'
+  const d = new Date(date)
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0') // Months are 0-indexed
+  const year = d.getFullYear()
+  return `${day}-${month}-${year}`
+}
 
   useEffect(() => {
     async function loadUserInfo() {
@@ -51,6 +65,26 @@ export default function HomePage() {
         const session = sessionData?.session
         if (session) {
           const user = session.user
+          const {data:userProfile, error:userProfileError} = await supabase.from('user_fitness_details').select('goal').eq('user_id', user.id).single()
+          setGoal(userProfile?.goal)
+          const { data: workoutData, error: workoutError } = await supabase
+          .from('workout_sessions')
+          .select('date')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false })
+          .limit(1)
+          .single();
+          setLastDate(workoutData?.date)
+
+          // Fetch the total number of workouts
+          const { count, error: countError } = await supabase
+            .from('workout_sessions')
+            .select('workout_id', { count: 'exact' })
+            .eq('user_id', user.id)
+
+          if (countError) throw new Error(countError.message)
+
+          setTotalWorkouts(count || 0)
           // Fetch user info if session exists (mocked data for now)
           // setUserInfo({
           //   lastWorkout: '2024-12-20', // Replace with actual data fetch
@@ -68,7 +102,6 @@ export default function HomePage() {
         setLoading(false)
       }
     }
-
     loadUserInfo()
   }, [router])
 
@@ -96,7 +129,7 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+      <div className="flex items-center justify-center min-h-screen ">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -135,7 +168,7 @@ export default function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-5xl font-bold mb-4 text-gradient">
+          <h1 className="text-5xl font-bold pb-6 text-gradient">
             Welcome, {Cookies.get('uname')}
           </h1>
           <p className="text-xl text-gradient mb-12">
@@ -146,24 +179,28 @@ export default function HomePage() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">
           <InfoCard
             title="Last Workout"
-            value={userInfo?.lastWorkout || 'N/A'}
+            // value={userInfo?.lastWorkout || 'N/A'}
+            value={formatDate(lastDate) || 'N/A'}
             icon={<Calendar className="h-6 w-6 text-blue-400" />}
           />
           <InfoCard
             title="Total Workouts"
-            value={userInfo?.totalWorkouts?.toString() || '0'}
+            // value={userInfo?.totalWorkouts?.toString() || '0'}
+            value={totalWorkouts.toString()|| '0'}
             icon={<Dumbbell className="h-6 w-6 text-green-400" />}
           />
           <InfoCard
             title="Fitness Goal"
-            value={userInfo?.fitnessGoal || 'Not set'}
+            value={goal || 'Not set'}
             icon={<Target className="h-6 w-6 text-purple-400" />}
           />
+          <Link href={"/auth/Details"}>
           <InfoCard
             title="Profile"
             value="View Details"
             icon={<User className="h-6 w-6 text-yellow-400" />}
           />
+          </Link>
         </div>
 
         <motion.div
